@@ -1,0 +1,8 @@
+vm:
+  server: master1
+  virtpool: /opt/vm/
+  nodename: "<%= node.name %>-<%= domain.config.cluster %>"
+  primac: 52:54:00:78:<%= '%02x' % node.group.index.to_s %>:<%= '%02x' % node.index.to_s %>
+  extmac: 52:54:00:78:<%= '%02x' % (node.group.index + 1).to_s %>:<%= '%02x' % node.index.to_s %>
+  vncpassword: 'password'
+  disksize: 80

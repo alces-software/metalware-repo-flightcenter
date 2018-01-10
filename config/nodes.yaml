@@ -1,0 +1,7 @@
+networks:
+  pri:
+    ip: 10.10.100.<%= node.index %>
+  ib:
+    ip: 10.12.100.<%= node.index %>
+  bmc:
+    ip: 10.11.100.<%= node.index %>

@@ -1,0 +1,57 @@
+networks:
+  pri:
+    defined: true
+    ip: 10.10.0.1
+    short_hostname: controller.pri
+    interface: eth0
+  mgt:
+    defined: true
+    ip: 10.11.0.1
+    short_hostname: controller.pri
+    interface: eth1
+  bmc:
+    defined: false
+  ib:
+    defined: false
+  ext:
+    defined: true
+    domain: ext
+    ip: <%= answer.ext_network_ip %>
+    network: <%= answer.ext_network_network %>
+    netmask: <%= answer.ext_network_netmask %>
+    gateway: <%= answer.ext_network_gateway %>
+    short_hostname: controller.ext
+    interface: ext
+    firewallpolicy: external
+build_method: self
+files:
+  setup:
+    - setup/dns.sh
+    - setup/xinetd.sh
+    - setup/dhcp.sh
+    - setup/http.sh
+    - /opt/alces/install/scripts/00-repos.sh
+    - /opt/alces/install/scripts/03-ganglia.sh
+  main:
+    - setup/main.sh
+  core:
+    - core/base.sh
+    - core/firstrun.sh
+    - core/chrony.sh
+    - core/syslog.sh
+    - core/postfix.sh
+    - core/network-base.sh
+    - core/network-ipmi.sh
+    - core/network-join.sh
+    - core/networking.sh
+    - core/configs/authorized_keys
+build:
+  pxeboot_path: /var/lib/tftpboot/boot
+ntp:
+  is_server: true
+rsyslog:
+  is_server: true
+yumrepo:
+  is_server: true
+ganglia:
+  is_server: true

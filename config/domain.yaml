@@ -1,0 +1,223 @@
+
+cluster: '<%= answer.cluster_name %>'
+# GENERATE with `openssl passwd -1 $PASSWD`.
+# XXX Change this so admin enters plain text root password, and we generate
+# encrypted password here?
+encrypted_root_password: '<%= answer.root_password %>'
+profile: MASTER
+ssh_key: '<%= answer.root_ssh_key %>'
+
+# Generic networking properties.
+domain: <%= answer.domain %>
+search_domains: "<% config.networks.each do |network, details| -%><%= details.domain %><%= if network.to_s == 'bmc' then '.mgt' else '' end %>.<%= config.domain %> <% end -%><%= config.domain %>"
+dns_type: "<%= answer.dns_type %>"
+externaldns: <%= answer.externaldns %>
+internaldns: <%= answer.internaldns %>
+kernelappendoptions: "console=tty0 console=ttyS1,115200n8"
+jobid: ""
+
+# Properties for specific config.networks.
+networks:
+  pri:
+    defined: <%= answer.pri_network_defined %>
+    interface: "<%= answer.pri_network_interface %>"
+    hostname: "<%= config.networks.pri.short_hostname %>.<%= config.domain %>"
+    domain: "<%= answer.pri_network_domain %>"
+    short_hostname: "<%= node.name %>.<%= config.networks.pri.domain %>"
+    ip: "<%= answer.pri_network_ip %>"
+    netmask: "<%= answer.pri_network_netmask %>"
+    network: "<%= answer.pri_network_network %>"
+    gateway: "<%= answer.pri_network_gateway %>"
+    primary: true
+    named_fwd_zone: "<%= config.networks.pri.domain %>.<%= config.domain %>"
+    named_rev_zone: <% split_net = answer.pri_network_network.split(/\./) -%><%= split_net[1] %>.<%= split_net[0] %>
+    firewallpolicy: trusted
+
+  mgt:
+    defined: <%= answer.mgt_network_defined %>
+    interface: "<%= answer.mgt_network_interface %>"
+    hostname: "<%= config.networks.mgt.short_hostname %>.<%= config.domain %>"
+    domain: "<%= answer.mgt_network_domain %>"
+    short_hostname: "<%= node.name %>.<%= config.networks.mgt.domain %>"
+    ip: "<%= answer.mgt_network_ip %>"
+    netmask: "<%= answer.mgt_network_netmask %>"
+    network: "<%= answer.mgt_network_network %>"
+    gateway:
+    named_fwd_zone: "<%= config.networks.mgt.domain %>.<%= config.domain %>"
+    named_rev_zone: <% split_net = answer.mgt_network_network.split(/\./) -%><%= split_net[1] %>.<%= split_net[0] %>
+    firewallpolicy: trusted
+
+  ib:
+    defined: <%= answer.ib_network_defined %>
+    interface: "<%= answer.ib_network_interface %>"
+    hostname: "<%= config.networks.ib.short_hostname %>.<%= config.domain %>"
+    domain: "<%= answer.ib_network_domain %>"
+    short_hostname: "<%= node.name %>.<%= config.networks.ib.domain %>"
+    ip: "<%= answer.ib_network_ip %>"
+    netmask: "<%= answer.ib_network_netmask %>"
+    network: "<%= answer.ib_network_network %>"
+    gateway:
+    named_fwd_zone: "<%= config.networks.ib.domain %>.<%= config.domain %>"
+    named_rev_zone: <% split_net = answer.ib_network_network.split(/\./) -%><%= split_net[1] %>.<%= split_net[0] %>
+    firewallpolicy: trusted
+
+  bmc:
+    defined: <%= answer.bmc_network_defined %>
+    interface: bmc
+    hostname: "<%= config.networks.bmc.short_hostname %>.<%= config.networks.mgt.domain %>.<%= config.domain %>"
+    domain: 'bmc'
+    short_hostname: "<%= node.name %>.<%= config.networks.bmc.domain %>"
+    ip: "<%= answer.bmc_network_ip %>"
+    netmask: "<%= answer.mgt_network_netmask %>"
+    network: "<%= answer.mgt_network_network %>"
+    gateway: 0.0.0.0
+    bmcpassword: "<%= answer.bmc_password %>"
+    bmcchannel: 1
+    bmcuser: 2
+    bmcvlan: <%= answer.bmc_network_vlan %>
+    firewallpolicy: trusted
+
+disklabel: 'sda'
+disksetup: |
+  zerombr
+  bootloader --location=mbr --driveorder=<%= config.disklabel %> --append="$bootloaderappend"
+  clearpart --all --initlabel
+
+  #Disk partitioning information
+  part /boot --fstype ext4 --size=4096 --asprimary --ondisk <%= config.disklabel %>
+  part pv.01 --size=1 --grow --asprimary --ondisk <%= config.disklabel %>
+  volgroup system pv.01
+  logvol  /  --fstype ext4 --vgname=system  --size=16384 --name=root
+  logvol  /var --fstype ext4 --vgname=system --size=16384 --name=var
+  logvol  /tmp --fstype ext4 --vgname=system --size=1 --grow --name=tmp
+  logvol  swap  --fstype swap --vgname=system  --size=8096  --name=swap1
+
+#disklabel2: 'sdb'
+#disksetup: |
+#  zerombr
+#
+#  bootloader --location=mbr --driveorder=<%= config.disklabel %> --append="$bootloaderappend"
+#  clearpart --all --initlabel
+#
+#  #Disk partitioning information
+#  part /boot --fstype ext4 --size=1024 --asprimary --ondisk <%= config.disklabel %>
+#  part /boot2 --fstype ext4 --size=1024 --asprimary --ondisk <%= config.disklabel2 %>
+#
+#  part raid.01 --size 60000 --ondisk <%= config.disklabel %> --asprimary
+#  part raid.02 --size 60000 --ondisk <%= config.disklabel2 %> --asprimary
+#
+#  raid pv.01 --level=1 --fstype=ext4 --device=md0 raid.01 raid.02
+#  volgroup system pv.01
+#  logvol  /  --fstype ext4 --vgname=system  --size=1  --name=root --grow
+#  logvol  /var  --fstype ext4 --vgname=system  --size=16384  --name=var
+#  logvol  swap  --fstype swap --vgname=system  --size=16384  --name=swap1
+#
+#  part raid.03 --size=1 --ondisk <%= config.disklabel %> --asprimary --grow
+#  part raid.04 --size=1 --ondisk <%= config.disklabel2 %> --asprimary --grow
+#
+#  raid /tmp --fstype ext4 --fstype=ext4 --device=md1 --level=0 raid.03 raid.04
+
+templates:
+  kickstart: <%= answer.kickstart_template %>
+  pxelinux: <%= answer.pxelinux_template %>
+
+files:
+  platform:
+    - /opt/alces/install/scripts/aws.sh
+  main:
+    - main.sh
+  setup:
+    - /opt/alces/install/scripts/00-repos.sh
+    - /opt/alces/install/scripts/01-nfs.sh
+    - /opt/alces/install/scripts/03-ganglia.sh
+  core:
+    - core/base.sh
+    - core/firstrun.sh
+    - core/chrony.sh
+    - core/syslog.sh
+    - core/postfix.sh
+    - core/network-base.sh
+    - core/network-ipmi.sh
+    - core/network-join.sh
+    - core/networking.sh
+    - core/configs/authorized_keys
+  scripts:
+    - /opt/alces/install/scripts/02-ipa.sh
+    - /opt/alces/install/scripts/20-flightcenter.sh
+
+ntp:
+  is_server: false
+  server: controller.<%= config.networks.pri.domain %>.<%= config.domain %>
+
+rsyslog:
+  is_server: false
+  server: controller
+
+firewall:
+  enabled: true
+  internal:
+    services: 'ssh http dhcp dns https mountd nfs ntp rpc-bind smtp syslog tftp tftp-client'
+  external:
+    services: 'ssh'
+  management:
+    services: 'ssh snmp'
+
+yumrepo:
+  # Repostiroy URL for kickstart builds 
+  build_url: http://10.10.0.1/repo/centos/7/base/
+  # If true, this server will host a client config file for the network
+  is_server: false
+  # Repoman source files for repository mirror server to use (comma separate)
+  source_repos: base.alcesinternal,custom.local
+  # The file for clients to curl containing repository information [OPTIONAL]
+  # clientrepofile: http://myrepo.com/repo/client.repo
+  clientrepofile: http://10.10.0.1/repo/client.repo
+postfix:
+  relayhost: "<%= answer.postfix_relay %>"
+ganglia:
+  server: 10.10.0.1
+  is_server: false
+flightcenter:
+  archivedir: '/opt/users'
+  sharedscratchdir: '/opt/users'
+  localscratchdir: '/tmp/users/'
+  # mailserver: flightcenter-mail.flightcenter.alces-flight.com
+  mailserver: 10.78.0.15
+  # ntpserver: flightcenter-mail.flightcenter.alces-flight.com
+  ntpserver: 10.78.0.15
+vm:
+  server: master1
+  virtpool: /opt/vm/
+  nodename: "<%= node.name %>-<%= domain.config.cluster %>"
+  primac: 52:54:00:78:<%= '%02x' % node.group.index.to_s %>:<%= '%02x' % node.index.to_s %>
+  extmac: 52:54:00:78:<%= '%02x' % (node.group.index + 1).to_s %>:<%= '%02x' % node.index.to_s %>
+  vncpassword: 'password'
+  disksize: 80
+nfsconfig:
+  is_server: false
+nfsmounts:
+  /opt/users:
+    defined: true
+    server: master1
+    export: /export/users
+  /opt/apps:
+    defined: true
+    server: master1
+    export: /export/apps
+  /opt/gridware:
+    defined: true
+    server: master1
+    export: /export/gridware
+  /opt/service:
+    defined: true
+    server: master1
+    export: /export/service
+  /opt/site:
+    defined: true
+    server: master1
+    export: /export/site
+ipaconfig:
+  serverip: 10.10.0.25
+  servername: infra01
+  insecurepassword: SpeytIg0
+  userdir: /users

@@ -1,0 +1,37 @@
+networks:
+  pri:
+    defined: true
+    interface: pri
+    ip: 10.10.0.<%= node.index + 10 %>
+    netmask: 255.255.0.0
+    network: 10.10.0.0
+    gateway: 10.10.0.1
+    primary: true
+    bridge:
+      interface: pri
+      slave_interfaces: bond0
+    bond:
+      interface: bond0
+      slave_interfaces: p1p1 p2p1
+      options: 'mode=1 primary=eth0 miimon=80'
+  mgt:
+    defined: true
+    interface: mgt
+    ip: 10.11.0.<%= node.index + 10 %>
+    netmask: 255.255.0.0
+    network: 10.11.0.0
+    bridge:
+      interface: mgt
+      slave_interfaces: em2
+  ext:
+    defined: true
+    domain: ext
+    ip: 10.101.100.66
+    network: 10.101.0.0
+    netmask: 255.255.0.0
+    gateway: 10.101.0.1
+    short_hostname: <%= node.name %>.<%= config.networks.ext.domain %>
+    interface: ext
+    firewallpolicy: external
+    type: Bridge
+    slave_interfaces: em4

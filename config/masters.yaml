@@ -1,0 +1,44 @@
+networks:
+  pri:
+    defined: true
+    interface: pri
+    ip: 10.10.0.<%= node.index + 10 %>
+    netmask: 255.255.0.0
+    network: 10.10.0.0
+    gateway: 10.10.0.1
+    primary: true
+    bridge:
+      interface: pri
+      slave_interfaces: bond0
+    bond:
+      interface: bond0
+      slave_interfaces: p1p1 p2p1
+      options: 'mode=1 primary=eth0 miimon=80'
+  mgt:
+    defined: true
+    interface: mgt
+    ip: 10.11.0.<%= node.index + 10 %>
+    netmask: 255.255.0.0
+    network: 10.11.0.0
+    bridge:
+      interface: mgt
+      slave_interfaces: em2
+disksetup: |
+  zerombr
+  bootloader --location=mbr --driveorder=<%= config.disklabel %> --append="$bootloaderappend"
+  clearpart --all --initlabel
+
+  #Disk partitioning information
+  part biosboot --fstype=biosboot --size=1 --ondisk <%= config.disklabel %>
+  part /boot --fstype ext4 --size=4096 --asprimary --ondisk <%= config.disklabel %>
+  part pv.01 --size=1 --grow --asprimary --ondisk <%= config.disklabel %>
+  volgroup system pv.01
+  logvol  /  --fstype ext4 --vgname=system  --size=32768 --name=root
+  logvol  /var --fstype ext4 --vgname=system --size=32768 --name=var
+  logvol  /opt --fstype ext4 --vgname=system --size=32768 --name=opt --grow
+  logvol  /tmp --fstype ext4 --vgname=system --size=32768 --name=tmp
+  logvol  swap  --fstype swap --vgname=system  --size=32768  --name=swap1
+nfsconfig:
+  is_server: true
+nfsexports:
+  /export/users:

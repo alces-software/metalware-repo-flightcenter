@@ -1,0 +1,30 @@
+networks:
+  pri:
+    ip: 10.10.0.<%= node.index + 35 %>
+  mgt:
+    defined: false
+  ib:
+    defined: false
+  bmc:
+    defined: false
+vm:
+  server: master1
+  virtpool: /opt/vm/
+  nodename: "<%= node.name %>-<%= domain.config.cluster %>"
+  primac: 52:54:00:78:<%= '%02x' % (node.group.index + 2).to_s %>:<%= '%02x' % node.index.to_s %>
+  extmac: 52:54:00:78:<%= '%02x' % (node.group.index + 3).to_s %>:<%= '%02x' % node.index.to_s %>
+  vncpassword: 'password'
+  disksize: 80
+nfsmounts:
+  /opt/users:
+    defined: true
+    server: master1
+    export: /export/users
+  /opt/apps:
+    defined: true
+    server: master1
+    export: /export/apps
+  /opt/site:
+    defined: true
+    server: master1
+    export: /export/site
