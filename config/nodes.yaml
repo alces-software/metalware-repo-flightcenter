@@ -5,3 +5,4 @@ networks:
     ip: 10.12.100.<%= node.index %>
   bmc:
     ip: 10.11.100.<%= node.index %>
+flightdirect: true

@@ -144,6 +144,7 @@ files:
   scripts:
     - /opt/alces/install/scripts/02-ipa.sh
     - /opt/alces/install/scripts/20-flightcenter.sh
+    - /opt/alces/install/scripts/20-flightdirect.sh
 
 ntp:
   is_server: false
@@ -173,7 +174,7 @@ yumrepo:
   # clientrepofile: http://myrepo.com/repo/client.repo
   clientrepofile: http://10.10.0.1/repo/client.repo
 postfix:
-  relayhost: "<%= answer.postfix_relay %>"
+  relayhost: "controller.<%= config.networks.pri.domain %>.<%= config.domain %>"
 ganglia:
   server: 10.10.0.1
   is_server: false
@@ -221,3 +222,4 @@ ipaconfig:
   servername: infra01
   insecurepassword: SpeytIg0
   userdir: /users
+flightdirect: false

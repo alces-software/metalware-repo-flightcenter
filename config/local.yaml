@@ -21,7 +21,7 @@ networks:
     netmask: <%= answer.ext_network_netmask %>
     gateway: <%= answer.ext_network_gateway %>
     short_hostname: controller.ext
-    interface: ext
+    interface: eth2
     firewallpolicy: external
 build_method: self
 files:
