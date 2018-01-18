@@ -42,3 +42,7 @@ nfsconfig:
   is_server: true
 nfsexports:
   /export/users:
+  /export/apps:
+  /export/gridware:
+  /export/service:
+  /export/site:

@@ -6,3 +6,4 @@ vm:
   extmac: 52:54:00:78:<%= '%02x' % (node.group.index + 5).to_s %>:<%= '%02x' % node.index.to_s %>
   vncpassword: 'password'
   disksize: 80
+# disksetup inherited from domain which grows tmp 
